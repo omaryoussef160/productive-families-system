@@ -1,0 +1,3 @@
+export function Hero({ onJoin, familyCount }) {
+  return <section className="hero" id="home"><div className="hero-pattern"/><div className="hero-reference"><p className="hero-kicker">منصة الأسر المنتجة</p><h1>كل قطعة ورا صنعتها أسرة<br/>مصرية بإيدها</h1><p className="hero-description">تطريز، خشب أرابيسك، شموع، أكل بيتي، وتريكو — منتجات أصلية من أسر منتجة<br/>في بورسعيد ودمياط والدلتا، توصلك مباشرة من إيد الصنايعية.</p><div className="hero-actions"><a className="cta" href="#products">تصفّحي المنتجات</a><button className="hero-secondary" onClick={onJoin}>عندك نشاط؟ سجّليه</button></div><p className="hero-count"><span>⭐</span> <b>{familyCount ?? 0}</b> أسرة مسجلة على المنصة دلوقتي</p></div><div className="hero-scallop"/></section>
+}

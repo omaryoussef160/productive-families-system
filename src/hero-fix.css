@@ -1,0 +1,2 @@
+/* The legacy hero rule targeted the first div; the pattern must span the whole hero. */
+.hero>.hero-pattern{width:100%;max-width:none!important}

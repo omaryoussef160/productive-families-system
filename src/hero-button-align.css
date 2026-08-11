@@ -1,0 +1,2 @@
+/* Keep the original content-driven button size; only remove the legacy top margin. */
+.hero-actions{align-items:center}.hero .cta,.hero .hero-secondary{height:auto;margin-top:0!important;margin-bottom:0!important}

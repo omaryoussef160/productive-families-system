@@ -1,0 +1,2 @@
+/* Exact background values copied from index-1.html. */
+.hero{background:#1c1917!important;background-image:none!important}.hero-pattern{position:absolute;inset:0;opacity:.25;background-image:repeating-linear-gradient(45deg,#78350f 0 2px,transparent 2px 22px),repeating-linear-gradient(-45deg,#78350f 0 2px,transparent 2px 22px)}.hero-reference{position:relative!important;z-index:1}.hero-scallop{z-index:2}.hero .cta{background:#b91c1c}.hero-secondary{border-color:#78716c}.hero-kicker{color:#fbbf24!important}

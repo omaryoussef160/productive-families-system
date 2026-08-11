@@ -1,0 +1,2 @@
+/* Direct equivalent of: max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between */
+@media(min-width:701px){.source-nav-inner{width:100%;max-width:1152px;padding:12px 24px;justify-content:space-between}.source-brand{flex-shrink:0;white-space:nowrap}.source-nav{margin-inline-start:auto;gap:28px;flex-shrink:0}}
