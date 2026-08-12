@@ -56,16 +56,18 @@ export default function AdminFamilies({ session, onNotice }) {
     const family = confirmPopup;
 
     try {
-      // Delete all products for this family first
-      await supabase.from('products').delete().eq('owner_id', family.id);
-      // Delete the profile
-      await supabase.from('profiles').delete().eq('id', family.id);
-      
+      const { data, error } = await supabase.functions.invoke('delete-family', {
+        body: { familyId: family.id }
+      });
+
+      if (error) throw new Error(error.message || 'حدث خطأ أثناء استدعاء Edge Function');
+      if (data?.error) throw new Error(data.error);
+
       setFamilies(families.filter(f => f.id !== family.id));
-      onNotice(`تم حذف أسرة "${family.family_name}" وجميع منتجاتها نهائياً`, 'success');
+      onNotice(`تم حذف أسرة "${family.family_name}" وجميع منتجاتها وحسابها نهائياً`, 'success');
     } catch (err) {
       console.error('Error deleting family:', err);
-      onNotice('حدث خطأ أثناء حذف الأسرة', 'error');
+      onNotice(err.message || 'حدث خطأ أثناء حذف الأسرة. تأكد من نشر delete-family Edge Function.', 'error');
     } finally {
       setConfirmPopup(null);
     }
@@ -161,6 +163,7 @@ export default function AdminFamilies({ session, onNotice }) {
               <tr>
                 <th>اسم الأسرة</th>
                 <th>المدينة</th>
+                <th>النوع</th>
                 <th>واتساب</th>
                 <th>الحالة</th>
                 <th>تاريخ التسجيل</th>
@@ -177,6 +180,7 @@ export default function AdminFamilies({ session, onNotice }) {
                       {family.family_name} {family.is_admin && <span style={{ fontSize: '11px', color: '#fbbf24', marginRight: '6px' }}>(مدير)</span>}
                     </td>
                     <td data-label="المدينة">{family.city}</td>
+                    <td data-label="النوع">{family.category || 'غير محدد'}</td>
                     <td data-label="واتساب" dir="ltr" style={{ textAlign: 'right' }}>{family.whatsapp}</td>
                     <td data-label="الحالة">
                       <span className={`dash-badge dash-badge-${family.status}`}>

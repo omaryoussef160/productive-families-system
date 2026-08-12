@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabase';
+import { categories } from '../../data/catalog';
 
 export default function ProfileSettings({ profile, session, onNotice, onProfileUpdate }) {
   const [loading, setLoading] = useState(false);
@@ -7,6 +8,7 @@ export default function ProfileSettings({ profile, session, onNotice, onProfileU
     family_name: '',
     city: '',
     whatsapp: '',
+    category: categories[0] || '',
     bio: ''
   });
 
@@ -16,6 +18,7 @@ export default function ProfileSettings({ profile, session, onNotice, onProfileU
         family_name: profile.family_name || '',
         city: profile.city || '',
         whatsapp: profile.whatsapp || '',
+        category: profile.category || categories[0] || '',
         bio: profile.bio || ''
       });
     }
@@ -26,24 +29,43 @@ export default function ProfileSettings({ profile, session, onNotice, onProfileU
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      const updateData = {
+        family_name: formData.family_name,
+        city: formData.city,
+        whatsapp: formData.whatsapp,
+        category: formData.category,
+        bio: formData.bio
+      };
+
+      let { error } = await supabase
         .from('profiles')
-        .update({
-          family_name: formData.family_name,
-          city: formData.city,
-          whatsapp: formData.whatsapp,
-          bio: formData.bio
-        })
+        .update(updateData)
         .eq('id', session.user.id);
 
+      if (error && error.message?.includes("Could not find the `category` column of `profiles` in the schema cache")) {
+        const { error: fallbackError } = await supabase
+          .from('profiles')
+          .update({
+            family_name: formData.family_name,
+            city: formData.city,
+            whatsapp: formData.whatsapp,
+            bio: formData.bio
+          })
+          .eq('id', session.user.id);
+
+        if (fallbackError) throw fallbackError;
+        onNotice('تم تحديث بياناتك، لكن الفئة لم تُسجّل لأن العمود غير موجود في قاعدة البيانات بعد. شغّل ترحيل الفئة.', 'warning');
+        if (onProfileUpdate) onProfileUpdate();
+        return;
+      }
+
       if (error) throw error;
-      
       onNotice('تم تحديث الملف الشخصي بنجاح', 'success');
       if (onProfileUpdate) onProfileUpdate();
-      
+
     } catch (err) {
       console.error('Error updating profile:', err);
-      onNotice('حدث خطأ أثناء التحديث', 'error');
+      onNotice(err?.message || 'حدث خطأ أثناء التحديث', 'error');
     } finally {
       setLoading(false);
     }
@@ -86,6 +108,20 @@ export default function ProfileSettings({ profile, session, onNotice, onProfileU
               dir="ltr"
             />
           </div>
+        </div>
+
+        <div className="dash-form-group">
+          <label className="dash-label">نوع المنتجات</label>
+          <select
+            required
+            className="dash-select"
+            value={formData.category}
+            onChange={(e) => setFormData({...formData, category: e.target.value})}
+          >
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
 
         <div className="dash-form-group">

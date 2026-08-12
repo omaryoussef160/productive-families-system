@@ -12,12 +12,17 @@
 
 1. أنشئ مشروعًا جديدًا في [Supabase](https://supabase.com/dashboard).
 2. في **SQL Editor**، شغّل كامل محتوى `supabase/schema.sql`.
-3. من **Connect**، انسخ Project URL وPublishable key إلى `.env.local`.
-4. من **Authentication > Providers > Email** فعّل Email. للتجربة السريعة يمكنك تعطيل **Confirm email**، وللنشر اتركه مفعّلًا.
-5. أنشئ حسابك من الموقع، ثم نفّذ آخر أمر SQL الموجود في الملف بعد استبدال بريدك، لتحويله إلى أدمن.
+3. لتطبيق الحماية الأمنية ومنع ثغرات تعديل الصلاحيات والموافقة الذاتية للمنتجات، شغّل ملف المهاجرة `supabase/migrations/20260811_security_hardening.sql`.
+4. من **Connect**، انسخ Project URL وPublishable key إلى `.env.local`.
+5. من **Authentication > Providers > Email** فعّل Email. للتجربة السريعة يمكنك تعطيل **Confirm email**، وللنشر اتركه مفعّلًا.
+6. أنشئ حسابك من الموقع؛ التسجيل ينشئ ملف `profiles` بحالة `pending` ويحتاج موافقة أدمن قبل أن يظهر النشاط للعامة.
+7. ثم نفّذ آخر أمر SQL الموجود في الملف بعد استبدال بريدك، لتحويلك إلى أدمن.
 
-### إذا ظهر خطأ عند إضافة منتج
+### نشر Edge Functions
 
-شغّل `supabase/migrations/20260811_profile_safety.sql` مرة واحدة في SQL Editor. يعالج المستخدمين الحاليين الذين لا يملكون صفًا في `profiles` ويمنع تكرار المشكلة للحسابات الجديدة.
+لحذف الأسرة نهائيًا من حساب auth.users وسلة الصور في Storage عند الحذف من لوحة الأدمن:
+```bash
+supabase functions deploy delete-family
+```
 
 > لا تضع أبدًا `service_role key` في ملف `.env.local` أو في React؛ استخدم فقط Publishable/anon key.

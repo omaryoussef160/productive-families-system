@@ -68,6 +68,20 @@ export default function App() {
     }
   }
 
+  const handleLogout = async () => {
+    if (!supabase) return
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error('Logout error:', error)
+      setNotice('حدث خطأ أثناء تسجيل الخروج')
+      return
+    }
+    setSession(null)
+    setCurrentView('home')
+    setActiveModal(null)
+    setNotice('تم تسجيل الخروج بنجاح')
+  }
+
   const handleSelectFamily = (family) => {
     setSelectedFamily(family)
     setTimeout(() => {
@@ -101,6 +115,7 @@ export default function App() {
         onScrollToJoin={scrollToJoin}
         onOpenLogin={() => setActiveModal('auth')}
         onOpenDashboard={() => setCurrentView('dashboard')}
+        onLogout={handleLogout}
       />
       
       {notice && (
@@ -111,7 +126,7 @@ export default function App() {
       )}
       
       {activeModal === 'auth' && (
-        <AuthModal onClose={closeModal} onNotice={setNotice} />
+        <AuthModal onClose={closeModal} onNotice={setNotice} onScrollToJoin={scrollToJoin} />
       )}
       
       <main className={activeModal ? 'dim' : ''}>

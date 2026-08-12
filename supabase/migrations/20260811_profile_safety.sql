@@ -7,12 +7,13 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, family_name, city, whatsapp, status)
+  insert into public.profiles (id, family_name, city, whatsapp, category, status)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'family_name', 'متجر جديد'),
     coalesce(new.raw_user_meta_data->>'city', ''),
     coalesce(new.raw_user_meta_data->>'whatsapp', new.phone, ''),
+    coalesce(new.raw_user_meta_data->>'category', ''),
     'pending'
   )
   on conflict (id) do nothing;

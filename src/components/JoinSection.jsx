@@ -66,6 +66,7 @@ export function JoinSection({ onNotice, onOpenLogin }) {
           family_name: values.family_name.trim(),
           city: values.city.trim(),
           whatsapp: normalizedPhone,
+          category: values.category,
           bio: values.bio.trim()
         }
       }

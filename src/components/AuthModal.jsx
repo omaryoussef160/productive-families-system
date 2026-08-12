@@ -10,7 +10,7 @@ function phoneToEmail(value) {
   return `${normalized}@osra.local`
 }
 
-export function AuthModal({ onClose, onNotice }) {
+export function AuthModal({ onClose, onNotice, onScrollToJoin }) {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -89,7 +89,7 @@ export function AuthModal({ onClose, onNotice }) {
         </form>
 
         <p className="switch">
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>
+          <button onClick={() => { onClose(); onScrollToJoin && onScrollToJoin(); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>
             ليس لديك حساب؟ سجّلي من الصفحة الرئيسية
           </button>
         </p>

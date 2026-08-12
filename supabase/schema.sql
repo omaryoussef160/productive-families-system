@@ -4,33 +4,38 @@ create extension if not exists "uuid-ossp";
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   family_name text not null default '', city text not null default '', whatsapp text not null default '',
+  category text not null default '',
   bio text, status text not null default 'pending' check (status in ('pending','approved','rejected')),
   is_admin boolean not null default false, created_at timestamptz not null default now()
 );
+
 create table public.products (
   id uuid primary key default gen_random_uuid(), owner_id uuid not null references public.profiles(id) on delete cascade,
   name text not null, description text, price numeric(10,2) not null check (price > 0), category text not null,
   image_url text, status text not null default 'pending' check (status in ('pending','approved','rejected')),
   created_at timestamptz not null default now()
 );
--- Public requests submitted from the registration form. They do not create a family account.
-create table public.applications (
-  id uuid primary key default gen_random_uuid(),
-  family_name text not null, city text not null, category text not null, whatsapp text not null,
-  bio text, status text not null default 'pending' check (status in ('pending','approved','rejected')),
-  created_at timestamptz not null default now()
-);
+
 create index products_visible_idx on public.products(status, created_at desc);
 create index products_owner_idx on public.products(owner_id);
 
 -- Automatically creates the profile row after every authenticated sign-up.
 create or replace function public.create_profile_for_user() returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, family_name, city, whatsapp)
-  values (new.id, coalesce(new.raw_user_meta_data->>'family_name', ''), coalesce(new.raw_user_meta_data->>'city', ''), coalesce(new.raw_user_meta_data->>'whatsapp', new.phone, ''))
+  insert into public.profiles (id, family_name, city, whatsapp, category, status)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'family_name', 'متجر جديد'),
+    coalesce(new.raw_user_meta_data->>'city', ''),
+    coalesce(new.raw_user_meta_data->>'whatsapp', new.phone, ''),
+    coalesce(new.raw_user_meta_data->>'category', ''),
+    'pending'
+  )
   on conflict (id) do nothing;
   return new;
 end; $$;
+
+drop trigger if exists auth_user_profile on auth.users;
 create trigger auth_user_profile after insert on auth.users for each row execute procedure public.create_profile_for_user();
 
 create or replace function public.is_admin() returns boolean language sql stable security definer set search_path = public as $$
@@ -39,16 +44,60 @@ $$;
 
 alter table public.profiles enable row level security;
 alter table public.products enable row level security;
-alter table public.applications enable row level security;
+
 create policy "approved profiles are public" on public.profiles for select using (status = 'approved' or id = auth.uid() or public.is_admin());
 create policy "users update their profile" on public.profiles for update using (id = auth.uid() or public.is_admin()) with check (id = auth.uid() or public.is_admin());
+create policy "users create own pending profile" on public.profiles for insert to authenticated with check (id = auth.uid() and status = 'pending' and is_admin = false);
 create policy "admins manage profiles" on public.profiles for all using (public.is_admin()) with check (public.is_admin());
+
 create policy "approved products are public" on public.products for select using (status = 'approved' or owner_id = auth.uid() or public.is_admin());
 create policy "family inserts its products" on public.products for insert with check (owner_id = auth.uid());
 create policy "family updates its products" on public.products for update using (owner_id = auth.uid() or public.is_admin()) with check (owner_id = auth.uid() or public.is_admin());
 create policy "family deletes its products" on public.products for delete using (owner_id = auth.uid() or public.is_admin());
-create policy "anyone can submit an application" on public.applications for insert with check (status = 'pending');
-create policy "admins manage applications" on public.applications for all using (public.is_admin()) with check (public.is_admin());
+
+-- ── SECURITY TRIGGERS ──
+-- 1) Prevent non-admins from mutating sensitive profile fields (is_admin, status)
+create or replace function public.check_profile_update_security() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then
+    if (new.is_admin is distinct from old.is_admin) then
+      raise exception 'غير مسموح للمستخدم بتعديل رتبة الأدمن (is_admin)';
+    end if;
+    if (new.status is distinct from old.status) then
+      raise exception 'غير مسموح للمستخدم بتعديل حالة الحساب (status)';
+    end if;
+  end if;
+  return new;
+end; $$;
+
+drop trigger if exists profile_update_security on public.profiles;
+create trigger profile_update_security before update on public.profiles for each row execute function public.check_profile_update_security();
+
+-- 2) Prevent non-admins from approving their own product status
+create or replace function public.check_product_update_security() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then
+    if (new.status is distinct from old.status) then
+      raise exception 'غير مسموح للمستخدم بتعديل حالة المنتج مباشرة';
+    end if;
+  end if;
+  return new;
+end; $$;
+
+drop trigger if exists product_update_security on public.products;
+create trigger product_update_security before update on public.products for each row execute function public.check_product_update_security();
+
+-- 3) Force product status to 'pending' on insert for non-admins
+create or replace function public.check_product_insert_security() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then
+    new.status := 'pending';
+  end if;
+  return new;
+end; $$;
+
+drop trigger if exists product_insert_security on public.products;
+create trigger product_insert_security before insert on public.products for each row execute function public.check_product_insert_security();
 
 -- Product images bucket and safe per-user folders.
 insert into storage.buckets (id, name, public) values ('product-images', 'product-images', true) on conflict (id) do nothing;

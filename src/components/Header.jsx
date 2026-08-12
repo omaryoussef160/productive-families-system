@@ -10,7 +10,7 @@ function Logo({ small = false }) {
   )
 }
 
-export function Header({ session, onScrollToJoin, onOpenLogin, onOpenDashboard }) {
+export function Header({ session, onScrollToJoin, onOpenLogin, onOpenDashboard, onLogout }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -27,20 +27,22 @@ export function Header({ session, onScrollToJoin, onOpenLogin, onOpenDashboard }
           <a href="#families">الأسر المنتجة</a>
           
           {session ? (
-            <button onClick={onOpenDashboard}>لوحة أسرتي</button>
+            <>
+              <button onClick={onOpenDashboard}>لوحة التحكم</button>
+            </>
           ) : (
             <>
-              <button className="outline-btn" onClick={onOpenLogin} style={{ background: 'transparent', color: '#b91c1c', border: '1px solid #b91c1c' }}>دخول</button>
-              <button onClick={onScrollToJoin}>سجّلي أسرتك</button>
+              <button className="outline-btn" onClick={onOpenLogin}>دخول</button>
+              <button className="register-family-btn" onClick={onScrollToJoin}>سجّلي أسرتك</button>
             </>
           )}
         </nav>
-        
+
         <button className="source-menu-button" onClick={() => setOpen(!open)} aria-label="فتح القائمة">
           {open ? '×' : '☰'}
         </button>
       </div>
-      
+
       {open && (
         <div className="source-mobile-menu">
           <a onClick={() => setOpen(false)} href="#home">الرئيسية</a>
@@ -48,11 +50,25 @@ export function Header({ session, onScrollToJoin, onOpenLogin, onOpenDashboard }
           <a onClick={() => setOpen(false)} href="#families">الأسر المنتجة</a>
           
           {session ? (
-            <button onClick={() => { setOpen(false); onOpenDashboard() }}>لوحة أسرتي</button>
+            <> 
+              <button
+                className="mobile-menu-btn"
+                onClick={() => { setOpen(false); onOpenDashboard() }}
+              >
+                لوحة التحكم
+              </button>
+              <button
+                className="outline-btn"
+                onClick={() => { setOpen(false); onLogout?.() }}
+                style={{ marginTop: '8px' }}
+              >
+                خروج
+              </button>
+            </>
           ) : (
             <>
-              <button onClick={() => { setOpen(false); onOpenLogin() }} style={{ background: 'transparent', color: '#b91c1c', border: '1px solid #b91c1c', marginBottom: '8px' }}>دخول</button>
-              <button onClick={() => { setOpen(false); onScrollToJoin() }}>سجّلي أسرتك</button>
+              <a onClick={() => { setOpen(false); onScrollToJoin() }} href="#" className="mobile-register-link">سجّلي أسرتك</a>
+              <button className="outline-btn" onClick={() => { setOpen(false); onOpenLogin() }} style={{ marginTop: '8px' }}>دخول</button>
             </>
           )}
         </div>

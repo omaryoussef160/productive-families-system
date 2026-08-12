@@ -18,7 +18,7 @@ export function FamiliesSection({ onSelectFamily }) {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, products(category)')
         .eq('status', 'approved')
         .order('created_at', { ascending: false });
 
@@ -31,6 +31,15 @@ export function FamiliesSection({ onSelectFamily }) {
       setLoading(false);
     }
   };
+
+  const getFamilyCategory = (family) => {
+    if (family.category) return family.category
+    const inferredCategories = (family.products || [])
+      .map((product) => product.category)
+      .filter(Boolean)
+    const uniqueCategories = [...new Set(inferredCategories)]
+    return uniqueCategories.length > 0 ? uniqueCategories[0] : ''
+  }
 
   return (
     <section id="families" className="source-families">
@@ -47,61 +56,47 @@ export function FamiliesSection({ onSelectFamily }) {
               onClick={() => onSelectFamily && onSelectFamily(family)}
               style={{ 
                 cursor: 'pointer', 
-                transition: 'all 0.2s ease', 
-                position: 'relative',
-                background: '#ffffff',
-                border: '1px solid #e7e5e4',
-                borderRadius: '16px',
-                padding: '22px 24px',
-                marginBottom: '16px',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)'
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease', 
+                background: 'linear-gradient(180deg, #fffaf9 0%, #ffffff 100%)',
+                borderRadius: '28px',
+                padding: '28px',
+                marginBottom: '22px',
+                boxShadow: '0 22px 50px rgba(185, 28, 28, 0.08)',
+                border: '1px solid rgba(185, 28, 28, 0.14)',
+                overflow: 'hidden'
               }}
               title="اضغط لعرض منتجات هذه الأسرة"
+              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
-                <h3 style={{ margin: 0, color: '#1c1917', fontSize: '20px', fontWeight: '800' }}>
-                  {family.family_name || 'أسرة منتجة'}
-                </h3>
-                <span style={{ 
-                  fontSize: '12.5px', 
-                  color: '#ffffff', 
-                  fontWeight: '700', 
-                  background: '#b91c1c', 
-                  padding: '6px 14px', 
-                  borderRadius: '8px', 
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 2px 8px rgba(185, 28, 28, 0.25)'
-                }}>
-                  <span>عرض منتجات الأسرة</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="7" y1="17" x2="17" y2="7"/>
-                    <polyline points="7 7 17 7 17 17"/>
-                  </svg>
-                </span>
-              </div>
-
-              {/* Location & Contact Badges */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px', fontSize: '13px', color: '#b91c1c', fontWeight: '700' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                    <circle cx="12" cy="10" r="3"/>
-                  </svg>
-                  <span>{family.city || 'مصر'}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
+                <div>
+                  <h3 style={{ margin: 0, color: '#1c1917', fontSize: '22px', fontWeight: '800', letterSpacing: '-0.03em' }}>
+                    {family.family_name || 'أسرة منتجة'}
+                  </h3>
+                  <p style={{ margin: '12px 0 0 0', color: '#4b4840', fontSize: '15px', lineHeight: '1.8', maxWidth: '520px' }}>
+                    {family.bio && family.bio.trim() ? family.bio : 'أسرة منتجة متميزة تقدم أفضل المنتجات اليدوية والمنزلية.'}
+                  </p>
                 </div>
-                {family.whatsapp && (
-                  <span style={{ color: '#78716c', fontSize: '12.5px', fontWeight: '500' }} dir="ltr">
-                    · {family.whatsapp}
+                {getFamilyCategory(family) && (
+                  <span style={{ background: '#fef3c7', color: '#b45309', borderRadius: '9999px', padding: '10px 18px', fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', boxShadow: '0 4px 15px rgba(245, 158, 11, 0.18)' }}>
+                    {getFamilyCategory(family)}
                   </span>
                 )}
               </div>
 
-              {/* High Contrast Readable Bio Paragraph */}
-              <p style={{ marginTop: '10px', lineHeight: '1.7', color: '#44403c', fontSize: '14.5px', margin: '10px 0 0 0', fontWeight: '500' }}>
-                {family.bio && family.bio.trim() ? family.bio : 'أسرة منتجة متميزة تقدم أفضل المنتجات اليدوية والمنزلية.'}
-              </p>
+              <div style={{ display: 'grid', gap: '12px', marginTop: '22px', paddingTop: '18px', borderTop: '1px solid rgba(185, 28, 28, 0.14)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#b91c1c', fontSize: '14px', fontWeight: '600' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '9999px', background: '#b91c1c', display: 'inline-block' }} />
+                  <span>{family.city || 'مصر'}</span>
+                </div>
+                {family.whatsapp && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#7c2d12', fontSize: '14px', fontWeight: '600' }} dir="ltr">
+                    <span style={{ width: '10px', height: '10px', borderRadius: '9999px', background: '#f59e0b', display: 'inline-block' }} />
+                    <span>{family.whatsapp}</span>
+                  </div>
+                )}
+              </div>
             </article>
           ))}
         </div>
