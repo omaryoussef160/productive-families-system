@@ -5,6 +5,8 @@ export default function AdminProducts({ onNotice, onProductsUpdated }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [searchProduct, setSearchProduct] = useState('');
+  const [searchFamily, setSearchFamily] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -47,8 +49,11 @@ export default function AdminProducts({ onNotice, onProductsUpdated }) {
   };
 
   const filteredProducts = products.filter(p => {
-    if (filter === 'all') return true;
-    return p.status === filter;
+    if (filter !== 'all' && p.status !== filter) return false;
+    if (searchProduct && !p.name.toLowerCase().includes(searchProduct.toLowerCase())) return false;
+    const familyName = p.profiles?.family_name || 'غير معروف';
+    if (searchFamily && !familyName.toLowerCase().includes(searchFamily.toLowerCase())) return false;
+    return true;
   });
 
   return (
@@ -58,6 +63,25 @@ export default function AdminProducts({ onNotice, onProductsUpdated }) {
         <button className={`dash-tab-btn ${filter === 'pending' ? 'active' : ''}`} onClick={() => setFilter('pending')}>قيد المراجعة</button>
         <button className={`dash-tab-btn ${filter === 'approved' ? 'active' : ''}`} onClick={() => setFilter('approved')}>مقبول</button>
         <button className={`dash-tab-btn ${filter === 'rejected' ? 'active' : ''}`} onClick={() => setFilter('rejected')}>مرفوض</button>
+      </div>
+
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <input 
+          type="text" 
+          placeholder="🔍 ابحث باسم المنتج..." 
+          className="dash-input" 
+          value={searchProduct}
+          onChange={(e) => setSearchProduct(e.target.value)}
+          style={{ flex: '1 1 250px', padding: '12px 16px' }}
+        />
+        <input 
+          type="text" 
+          placeholder="🔍 ابحث باسم الأسرة (صاحب النشاط)..." 
+          className="dash-input" 
+          value={searchFamily}
+          onChange={(e) => setSearchFamily(e.target.value)}
+          style={{ flex: '1 1 250px', padding: '12px 16px' }}
+        />
       </div>
 
       {loading ? (
@@ -81,7 +105,7 @@ export default function AdminProducts({ onNotice, onProductsUpdated }) {
                   <td data-label="الصورة">
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
-                    ) : '🧺'}
+                    ) : (<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>)}
                   </td>
                   <td data-label="اسم المنتج" style={{ fontWeight: 'bold' }}>{product.name}</td>
                   <td data-label="الأسرة">{product.profiles?.family_name || 'غير معروف'}</td>

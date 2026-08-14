@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabase';
+import joinArt from '../../join-art.jpg';
 import { categories } from '../../data/catalog';
 
 export default function ProfileSettings({ profile, session, onNotice, onProfileUpdate }) {
@@ -72,8 +73,15 @@ export default function ProfileSettings({ profile, session, onNotice, onProfileU
   };
 
   return (
-    <div className="dash-form">
-      <form onSubmit={handleSubmit}>
+    <div style={{ width: '100%', maxWidth: '1100px', margin: '0 auto' }}>
+      <div className="dash-profile-card">
+        <div className="dash-profile-form-side">
+          <div style={{ marginBottom: '32px' }}>
+            <h2 className="dash-heading" style={{ fontSize: '28px', color: '#b91c1c', marginBottom: '8px' }}>تعديل الملف الشخصي</h2>
+            <p style={{ color: 'var(--dash-text-muted)', fontSize: '15px', lineHeight: '1.6', margin: 0 }}>حدثي بيانات أسرتك المنتجة وأرقام التواصل لضمان وصول طلبات العملاء.</p>
+          </div>
+          
+          <form onSubmit={handleSubmit}>
         <div className="dash-form-group">
           <label className="dash-label">اسم الأسرة المنتجة</label>
           <input
@@ -144,8 +152,15 @@ export default function ProfileSettings({ profile, session, onNotice, onProfileU
 
       {/* Password Change Section */}
       <div style={{ marginTop: '40px', paddingTop: '30px', borderTop: '1px solid var(--dash-border)' }}>
-        <h3 className="dash-heading" style={{ fontSize: '18px', marginBottom: '16px' }}>تغيير كلمة المرور 🔑</h3>
+        <h3 className="dash-heading" style={{ fontSize: '18px', marginBottom: '16px' }}><div style={{display: "flex", alignItems: "center", color: "#374151"}}>تغيير كلمة المرور <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: "8px"}}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg></div></h3>
         <PasswordChangeForm onNotice={onNotice} />
+      </div>
+        </div>
+        
+        <div className="dash-profile-art-side">
+          <div className="dash-s-curve-divider"></div>
+          <img src={joinArt} alt="أسرة منتجة" />
+        </div>
       </div>
     </div>
   );
@@ -165,7 +180,7 @@ function PasswordChangeForm({ onNotice }) {
       setLoading(true);
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      onNotice('تم تغيير كلمة المرور بنجاح ✅', 'success');
+      onNotice('تم تغيير كلمة المرور بنجاح', 'success');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {

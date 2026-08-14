@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../supabase';
+import dashAddImg from '../../dash-add.jpg';
 import { categories } from '../../data/catalog';
 
 export default function AddProduct({ session, onNotice, onNavigate, productToEdit, onEditComplete }) {
@@ -77,9 +78,30 @@ export default function AddProduct({ session, onNotice, onNavigate, productToEdi
   };
 
   return (
-    <div className="dash-form">
-      <form onSubmit={handleSubmit}>
-        {isEditing && <div className="dash-edit-notice">✏️ عدّلي بيانات المنتج ثم أرسليه للمراجعة مرة أخرى.</div>}
+    <div style={{ width: '100%', maxWidth: '900px', margin: '0 auto' }}>
+      <div className="dash-form" style={{ padding: 0, overflow: 'hidden' }}>
+        
+        {/* Cover Image Header */}
+        <div style={{ height: '240px', position: 'relative' }}>
+          <img src={dashAddImg} alt="Add Product" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%', mixBlendMode: 'multiply' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(255,255,255,1), transparent 60%)', zIndex: 1 }}></div>
+          <div style={{ position: 'absolute', inset: 0, background: '#fdf5df', zIndex: -1 }}></div>
+        </div>
+
+        {/* Form Container */}
+        <div style={{ padding: '0 40px 40px', marginTop: '-10px', position: 'relative', zIndex: 2 }}>
+          
+          <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+            <h2 className="dash-heading" style={{ fontSize: '28px', color: '#b91c1c', marginBottom: '8px' }}>
+              {productToEdit ? 'تعديل المنتج' : 'إضافة منتج جديد'}
+            </h2>
+            <p style={{ color: 'var(--dash-text-muted)', fontSize: '15px' }}>
+              {productToEdit ? 'قومي بتحديث تفاصيل منتجك الحالي هنا.' : 'شاركي إبداعاتك مع العالم! أضيفي صور واضحة وتفاصيل دقيقة لمنتجك الجديد ليتم مراجعته وعرضه في المتجر.'}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+        {isEditing && <div className="dash-edit-notice">عدّلي بيانات المنتج ثم أرسليه للمراجعة مرة أخرى.</div>}
         <div className="dash-form-group">
           <label className="dash-label">اسم المنتج</label>
           <input
@@ -136,15 +158,20 @@ export default function AddProduct({ session, onNotice, onNavigate, productToEdi
         <div className="dash-form-group">
           <label className="dash-label">صورة المنتج</label>
           
-          <label className="dash-image-upload-area" style={{ display: 'block', marginBottom: '16px' }}>
+          <label className="dash-image-upload-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', border: '2px dashed var(--dash-border)', borderRadius: '16px', cursor: 'pointer', background: '#fafaf9', transition: 'all 0.2s ease', marginBottom: '16px' }}>
             <input 
               type="file" 
               accept="image/*" 
               onChange={handleFileChange} 
               style={{ display: 'none' }} 
             />
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>📸</div>
-            <div>اضغط لاختيار صورة من جهازك</div>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a8a29e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '12px' }}>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <div style={{ fontWeight: '600', color: '#57534e', marginBottom: '4px' }}>اضغطي لاختيار صورة المنتج</div>
+            <div style={{ fontSize: '12px', color: '#a8a29e' }}>JPG, PNG أو WEBP (الحد الأقصى 5MB)</div>
           </label>
           
           <div style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--dash-text-muted)' }}>أو</div>
@@ -175,6 +202,8 @@ export default function AddProduct({ session, onNotice, onNavigate, productToEdi
           {loading ? (isEditing ? 'جارٍ حفظ التعديلات...' : 'جاري الإضافة...') : (isEditing ? 'حفظ وإعادة للمراجعة' : 'إضافة المنتج')}
         </button>
       </form>
+    </div>
+    </div>
     </div>
   );
 }

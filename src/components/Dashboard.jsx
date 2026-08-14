@@ -6,9 +6,11 @@ import AddProduct from './dashboard/AddProduct';
 import ProfileSettings from './dashboard/ProfileSettings';
 import AdminFamilies from './dashboard/AdminFamilies';
 import AdminProducts from './dashboard/AdminProducts';
+import logoImg from '../logo4.jpg';
 import '../dashboard.css';
 import '../dashboard-responsive.css';
 import '../product-review.css';
+import dashTableFooter from '../dash-table-footer.jpg';
 
 /* Clean SVG Icons */
 const icons = {
@@ -40,10 +42,35 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
-      setProfile(data);
+      
+      if (!data) {
+        const meta = session.user.user_metadata || {};
+        const newProfile = {
+          id: session.user.id,
+          family_name: meta.family_name || 'أسرة منتجة',
+          city: meta.city || '',
+          whatsapp: meta.whatsapp || '',
+          bio: meta.bio || ''
+        };
+        
+        const { data: created, error: insertErr } = await supabase
+          .from('profiles')
+          .insert(newProfile)
+          .select()
+          .maybeSingle();
+          
+        if (insertErr) {
+          console.error('Fallback insert failed', insertErr);
+          setProfile(newProfile);
+        } else {
+          setProfile(created || newProfile);
+        }
+      } else {
+        setProfile(data);
+      }
     } catch (err) {
       console.error('Error fetching profile:', err);
       onNotice('حدث خطأ في تحميل بيانات الملف الشخصي', 'error');
@@ -83,15 +110,15 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
   if (!profile?.is_admin && profile?.status === 'pending') {
     return (
       <div className="dash-container" style={{ alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center', minHeight: '100vh', width: '100vw' }}>
-        <div style={{ background: 'var(--dash-bg-card)', border: '1px solid var(--dash-border)', padding: '40px 32px', borderRadius: '16px', maxWidth: '480px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
+        <div style={{ background: 'var(--dash-bg-card)', border: '1px solid var(--dash-border)', padding: '40px 32px', borderRadius: '16px', maxWidth: '480px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
           <div style={{ fontSize: '56px', marginBottom: '16px' }}>⏳</div>
-          <h2 style={{ color: '#fbbf24', fontFamily: 'Cairo', margin: '0 0 12px 0', fontSize: '22px' }}>حسابك قيد المراجعة</h2>
+          <h2 style={{ color: 'var(--dash-primary)', fontFamily: 'Cairo', margin: '0 0 12px 0', fontSize: '22px' }}>حسابك قيد المراجعة</h2>
           <p style={{ color: 'var(--dash-text-muted)', lineHeight: '1.7', margin: '0 0 24px 0', fontSize: '14px' }}>
-            أهلاً بك 👋 طلبك قيد المراجعة حالياً من قِبل إدارة المنصة. سيتم التواصل معك على رقم الواتساب فور قبول حسابك وتفعيله.
+            أهلاً بك طلبك قيد المراجعة حالياً من قِبل إدارة المنصة. سيتم التواصل معك على رقم الواتساب فور قبول حسابك وتفعيله.
           </p>
           <div className="dash-pending-actions">
             <button className="dash-btn dash-btn-primary" onClick={onBack}>العودة للمتجر الرئيسي</button>
-            <button className="dash-btn" style={{ background: 'rgba(255,255,255,0.08)', color: '#e7e5e4' }} onClick={handleLogout}>تسجيل الخروج</button>
+            <button className="dash-btn" style={{ background: '#f5f5f4', color: '#292524' }} onClick={handleLogout}>تسجيل الخروج</button>
           </div>
         </div>
       </div>
@@ -124,7 +151,7 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
 
   return (
     <div className="dash-container">
-      {/* Mobile Backdrop */}
+        {/* Mobile Backdrop */}
       {mobileMenuOpen && (
         <div 
           className="dash-backdrop" 
@@ -136,11 +163,11 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
       <aside className={`dash-sidebar ${mobileMenuOpen ? 'show' : ''}`}>
         <div className="dash-logo-area">
           <div className="dash-brand">
-            <div className="dash-brand-icon">L</div>
+            <img src={logoImg} alt="لمسة أسرة" style={{ width: '42px', height: '42px', objectFit: 'contain', mixBlendMode: 'multiply', borderRadius: '8px' }} />
             <h2 className="dash-logo-text">لمسة أسرة</h2>
           </div>
           <button className="dash-mobile-toggle" onClick={() => setMobileMenuOpen(false)}>
-            ✕
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
 
@@ -171,6 +198,8 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
             </button>
           ))}
 
+          
+
           <div className="dash-nav-bottom">
             <button type="button" className="dash-nav-btn" onClick={onBack}>
               <span className="dash-nav-icon">{icons.home}</span>
@@ -195,6 +224,20 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
             </button>
             <h1 className="dash-header-title">{getPageTitle()}</h1>
           </div>
+          <button 
+            onClick={onBack} 
+            className="dash-btn dash-btn-sm" 
+            style={{ 
+              background: '#fef2f2', 
+              color: 'var(--dash-primary)', 
+              border: '1px solid #fecaca',
+              padding: '6px 12px',
+              fontSize: '13px'
+            }}
+          >
+            العودة للرئيسية
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </button>
         </header>
         
         <div className="dash-content">

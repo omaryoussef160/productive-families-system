@@ -57,7 +57,7 @@ export function ProductsSection({ products, selectedCategory, onCategoryChange, 
               fontWeight: '700'
             }}
           >
-            عرض جميع المنتجات ✕
+            عرض جميع المنتجات
           </button>
         </div>
       )}

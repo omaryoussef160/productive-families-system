@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom'
 import { Footer, Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { ProductsSection } from './components/ProductsSection'
@@ -16,8 +17,8 @@ export default function App() {
   const [selectedFamily, setSelectedFamily] = useState(null)
   const [session, setSession] = useState(null)
   const [activeModal, setActiveModal] = useState(null)
-  const [currentView, setCurrentView] = useState('home')
   const [notice, setNotice] = useState('')
+  const navigate = useNavigate()
 
   async function loadProducts() {
     if (!isConfigured) return setProducts([])
@@ -62,9 +63,12 @@ export default function App() {
   const closeModal = () => setActiveModal(null)
   const scrollToJoin = () => {
     if (session) {
-      setCurrentView('dashboard')
+      navigate('/dashboard')
     } else {
-      document.getElementById('join')?.scrollIntoView({ behavior: 'smooth' })
+      navigate('/')
+      setTimeout(() => {
+        document.getElementById('join')?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
     }
   }
 
@@ -77,74 +81,82 @@ export default function App() {
       return
     }
     setSession(null)
-    setCurrentView('home')
     setActiveModal(null)
+    navigate('/')
     setNotice('تم تسجيل الخروج بنجاح')
   }
 
   const handleSelectFamily = (family) => {
     setSelectedFamily(family)
+    navigate('/')
     setTimeout(() => {
       document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
-    }, 50)
-  }
-
-  if (currentView === 'dashboard' && session) {
-    return (
-      <>
-        {notice && (
-          <div className="notice">
-            {notice}
-            <button onClick={() => setNotice('')}>×</button>
-          </div>
-        )}
-        <Dashboard
-          session={session}
-          onBack={() => { loadProducts(); loadFamilyCount(); setCurrentView('home'); }}
-          onRefreshProducts={loadProducts}
-          onNotice={setNotice}
-        />
-      </>
-    )
+    }, 100)
   }
 
   return (
     <>
-      <Header
-        session={session}
-        onScrollToJoin={scrollToJoin}
-        onOpenLogin={() => setActiveModal('auth')}
-        onOpenDashboard={() => setCurrentView('dashboard')}
-        onLogout={handleLogout}
-      />
-      
-      {notice && (
-        <div className="notice">
-          {notice}
-          <button onClick={() => setNotice('')}>×</button>
-        </div>
-      )}
-      
-      {activeModal === 'auth' && (
-        <AuthModal onClose={closeModal} onNotice={setNotice} onScrollToJoin={scrollToJoin} />
-      )}
-      
-      <main className={activeModal ? 'dim' : ''}>
-        <Hero onJoin={scrollToJoin} familyCount={familyCount} />
-        <ProductsSection
-          products={products}
-          selectedCategory={category}
-          onCategoryChange={setCategory}
-          selectedFamily={selectedFamily}
-          onClearFamilyFilter={() => setSelectedFamily(null)}
-          isConfigured={isConfigured}
-        />
-        <HowItWorks />
-        <FamiliesSection onSelectFamily={handleSelectFamily} />
-        {!session && <JoinSection onNotice={setNotice} onOpenLogin={() => setActiveModal('auth')} />}
-      </main>
-      
-      <Footer />
+      <Routes>
+        <Route path="/dashboard" element={
+          session ? (
+            <>
+              {notice && (
+                <div className="notice">
+                  {notice}
+                  <button onClick={() => setNotice('')}>×</button>
+                </div>
+              )}
+              <Dashboard
+                session={session}
+                onBack={() => { loadProducts(); loadFamilyCount(); navigate('/'); }}
+                onRefreshProducts={loadProducts}
+                onNotice={setNotice}
+              />
+            </>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        } />
+        <Route path="/" element={
+          <>
+            <Header
+              session={session}
+              onScrollToJoin={scrollToJoin}
+              onOpenLogin={() => setActiveModal('auth')}
+              onOpenDashboard={() => navigate('/dashboard')}
+              onLogout={handleLogout}
+            />
+            
+            {notice && (
+              <div className="notice">
+                {notice}
+                <button onClick={() => setNotice('')}>×</button>
+              </div>
+            )}
+            
+            {activeModal === 'auth' && (
+              <AuthModal onClose={closeModal} onNotice={setNotice} onScrollToJoin={scrollToJoin} />
+            )}
+            
+            <main className={activeModal ? 'dim' : ''}>
+              <Hero onJoin={scrollToJoin} familyCount={familyCount} />
+              <ProductsSection
+                products={products}
+                selectedCategory={category}
+                onCategoryChange={setCategory}
+                selectedFamily={selectedFamily}
+                onClearFamilyFilter={() => setSelectedFamily(null)}
+                isConfigured={isConfigured}
+              />
+              <HowItWorks />
+              <FamiliesSection onSelectFamily={handleSelectFamily} />
+              {!session && <JoinSection onNotice={setNotice} onOpenLogin={() => setActiveModal('auth')} />}
+            </main>
+            
+            <Footer />
+          </>
+        } />
+      </Routes>
     </>
   )
 }

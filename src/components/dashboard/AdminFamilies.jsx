@@ -5,6 +5,7 @@ export default function AdminFamilies({ session, onNotice }) {
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [searchFamily, setSearchFamily] = useState('');
   const [confirmPopup, setConfirmPopup] = useState(null); // { family }
 
   useEffect(() => {
@@ -56,26 +57,34 @@ export default function AdminFamilies({ session, onNotice }) {
     const family = confirmPopup;
 
     try {
-      const { data, error } = await supabase.functions.invoke('delete-family', {
-        body: { familyId: family.id }
-      });
+      // 1. Delete all products for this family first
+      await supabase.from('products').delete().eq('owner_id', family.id);
+      
+      // 2. Delete the family profile
+      const { error } = await supabase.from('profiles').delete().eq('id', family.id);
 
-      if (error) throw new Error(error.message || 'حدث خطأ أثناء استدعاء Edge Function');
-      if (data?.error) throw new Error(data.error);
+      if (error) throw error;
 
       setFamilies(families.filter(f => f.id !== family.id));
-      onNotice(`تم حذف أسرة "${family.family_name}" وجميع منتجاتها وحسابها نهائياً`, 'success');
+      onNotice(`تم حذف أسرة "${family.family_name}" وجميع منتجاتها نهائياً`, 'success');
     } catch (err) {
       console.error('Error deleting family:', err);
-      onNotice(err.message || 'حدث خطأ أثناء حذف الأسرة. تأكد من نشر delete-family Edge Function.', 'error');
+      onNotice('حدث خطأ أثناء الحذف. تأكد من إعدادات قاعدة البيانات (RLS).', 'error');
     } finally {
       setConfirmPopup(null);
     }
   };
 
   const filteredFamilies = families.filter(f => {
-    if (filter === 'all') return true;
-    return f.status === filter;
+    if (filter !== 'all' && f.status !== filter) return false;
+    if (searchFamily) {
+      const search = searchFamily.toLowerCase();
+      const matchName = f.family_name?.toLowerCase().includes(search);
+      const matchCity = f.city?.toLowerCase().includes(search);
+      const matchPhone = f.whatsapp?.includes(search);
+      if (!matchName && !matchCity && !matchPhone) return false;
+    }
+    return true;
   });
 
   return (
@@ -154,6 +163,17 @@ export default function AdminFamilies({ session, onNotice }) {
         <button className={`dash-tab-btn ${filter === 'rejected' ? 'active' : ''}`} onClick={() => setFilter('rejected')}>مرفوض</button>
       </div>
 
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <input 
+          type="text" 
+          placeholder="🔍 ابحث باسم الأسرة، المدينة، أو رقم الواتساب..." 
+          className="dash-input" 
+          value={searchFamily}
+          onChange={(e) => setSearchFamily(e.target.value)}
+          style={{ flex: '1 1 250px', padding: '12px 16px' }}
+        />
+      </div>
+
       {loading ? (
         <div>جاري التحميل...</div>
       ) : (
@@ -190,7 +210,7 @@ export default function AdminFamilies({ session, onNotice }) {
                     <td data-label="تاريخ التسجيل">{new Date(family.created_at).toLocaleDateString('ar-EG')}</td>
                     <td data-label="إجراءات">
                       {isSelf ? (
-                        <span className="dash-badge dash-badge-admin" style={{ opacity: 0.9 }}>حسابك الحالي 👑</span>
+                        <span className="dash-badge dash-badge-admin" style={{ opacity: 0.9 }}>حسابك الحالي <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: "4px"}}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>
                       ) : (
                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                           {family.status !== 'approved' && (

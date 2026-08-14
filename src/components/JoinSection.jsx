@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { categories } from '../data/catalog'
 import { isConfigured, supabase } from '../supabase'
+import joinArt from '../join-art.jpg'
 
 function phoneToEmail(value) {
   const digits = value.replace(/\D/g, '')
@@ -82,8 +83,9 @@ export function JoinSection({ onNotice, onOpenLogin }) {
 
   return (
     <section id="join" className="join-section">
-      <div className="join-container">
-        <div className="join-heading">
+      <div className="join-card">
+        <div className="join-form-side">
+          <div className="join-heading">
           <span>لو عندك أسرة منتجة؟ انضمي للمنصة</span>
           <h2>سجّلي نشاطك دلوقتي</h2>
           <p>املئي البيانات، وهنراجع طلبك قبل ظهور منتجاتك على المنصة.</p>
@@ -92,7 +94,7 @@ export function JoinSection({ onNotice, onOpenLogin }) {
         {sent ? (
           <div className="join-success">
             <div className="success-icon">✓</div>
-            <b>تم إرسال طلبك بنجاح 🎉</b>
+            <b>تم إرسال طلبك بنجاح</b>
             <span>هنراجع البيانات ونتواصل معك على واتساب بعد القبول.</span>
             <button onClick={() => { setSent(false); setValues(initialValues) }}>تسجيل نشاط آخر</button>
           </div>
@@ -180,10 +182,18 @@ export function JoinSection({ onNotice, onOpenLogin }) {
             </label>
             
             <button className="join-submit" disabled={loading}>
-              {loading ? 'جارٍ إرسال الطلب...' : <>إرسال طلب التسجيل <span>←</span></>}
+              {loading ? 'جارٍ إرسال الطلب...' : (
+                <>
+                  إرسال طلب التسجيل 
+                  <svg className="submit-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                  </svg>
+                </>
+              )}
             </button>
             
-            <p className="join-privacy">🔒 بياناتك لن تظهر للعامة إلا بعد موافقتك وقبول الطلب.</p>
+            <p className="join-privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: "middle", marginLeft: "6px"}}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> بياناتك لن تظهر للعامة إلا بعد موافقتك وقبول الطلب.</p>
             <p className="join-privacy" style={{ marginTop: '10px', fontSize: '13px' }}>
               عندك حساب بالفعل؟{' '}
               <button
@@ -205,6 +215,11 @@ export function JoinSection({ onNotice, onOpenLogin }) {
             </p>
           </form>
         )}
+        </div>
+        <div className="join-art-side">
+          <div className="s-curve-divider"></div>
+          <img src={joinArt} alt="أسرة منتجة" />
+        </div>
       </div>
     </section>
   )
