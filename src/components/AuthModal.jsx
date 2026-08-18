@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase, isConfigured } from '../supabase'
+import { supabase, isConfigured } from '../config/supabase'
 
 /* Convert any Egyptian phone format to a consistent email for Supabase auth.
    01012345678 → 201012345678@osra.local

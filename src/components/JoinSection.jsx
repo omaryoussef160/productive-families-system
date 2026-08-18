@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { categories } from '../data/catalog'
-import { isConfigured, supabase } from '../supabase'
-import joinArt from '../join-art.jpg'
+import { isConfigured, supabase } from '../config/supabase'
+import joinArt from '../assets/images/join-art.jpg'
 
 function phoneToEmail(value) {
   const digits = value.replace(/\D/g, '')

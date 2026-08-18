@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import logoImg from '../logo4.jpg'
+import logoImg from '../assets/images/logo4.jpg'
 
 function Logo({ small = false, scrolled = false }) {
   // Make logo significantly larger by default (e.g. 52px), and shrink it slightly when scrolled

@@ -8,7 +8,7 @@ import { FamiliesSection } from './components/FamiliesSection'
 import { JoinSection } from './components/JoinSection'
 import { AuthModal } from './components/AuthModal'
 import { Dashboard } from './components/Dashboard'
-import { supabase, isConfigured } from './supabase'
+import { supabase, isConfigured } from './config/supabase'
 
 export default function App() {
   const [products, setProducts] = useState([])

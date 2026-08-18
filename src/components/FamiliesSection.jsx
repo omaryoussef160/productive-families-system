@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, isConfigured } from '../supabase';
+import { supabase, isConfigured } from '../config/supabase';
 
 export function FamiliesSection({ onSelectFamily }) {
   const [families, setFamilies] = useState([]);

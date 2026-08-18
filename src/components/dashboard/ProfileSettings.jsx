@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../supabase';
-import joinArt from '../../join-art.jpg';
+import { supabase } from '../../config/supabase';
+import joinArt from '../../assets/images/join-art.jpg';
 import { categories } from '../../data/catalog';
 
 export default function ProfileSettings({ profile, session, onNotice, onProfileUpdate }) {

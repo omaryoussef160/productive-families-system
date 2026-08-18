@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../supabase';
-import dashBanner from '../../dash-banner.jpg';
+import { supabase } from '../../config/supabase';
+import dashBanner from '../../assets/images/dash-banner.jpg';
 import PageBanner from './PageBanner';
 
 export default function DashboardOverview({ profile, session }) {

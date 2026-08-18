@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../supabase';
-import dashAddImg from '../../dash-add.jpg';
+import { supabase } from '../../config/supabase';
+import dashAddImg from '../../assets/images/dash-add.jpg';
 import { categories } from '../../data/catalog';
 
 export default function AddProduct({ session, onNotice, onNavigate, productToEdit, onEditComplete }) {

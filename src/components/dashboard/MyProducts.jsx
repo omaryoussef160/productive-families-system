@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../supabase';
+import { supabase } from '../../config/supabase';
 import PageBanner from './PageBanner';
-import dashProductsImg from '../../dash-products.jpg';
+import dashProductsImg from '../../assets/images/dash-products.jpg';
 
 export default function MyProducts({ session, onNotice, onEdit }) {
   const [products, setProducts] = useState([]);

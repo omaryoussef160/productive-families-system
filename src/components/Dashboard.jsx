@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+import { supabase } from '../config/supabase';
 import DashboardOverview from './dashboard/DashboardOverview';
 import MyProducts from './dashboard/MyProducts';
 import AddProduct from './dashboard/AddProduct';
 import ProfileSettings from './dashboard/ProfileSettings';
 import AdminFamilies from './dashboard/AdminFamilies';
 import AdminProducts from './dashboard/AdminProducts';
-import logoImg from '../logo4.jpg';
-import '../dashboard.css';
-import '../dashboard-responsive.css';
-import '../product-review.css';
-import dashTableFooter from '../dash-table-footer.jpg';
+import logoImg from '../assets/images/logo4.jpg';
+import '../assets/styles/dashboard.css';
+import '../assets/styles/dashboard-responsive.css';
+import '../assets/styles/product-review.css';
+import dashTableFooter from '../assets/images/dash-table-footer.jpg';
 
 /* Clean SVG Icons */
 const icons = {
