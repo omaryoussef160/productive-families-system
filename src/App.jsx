@@ -8,11 +8,15 @@ import { FamiliesSection } from './components/FamiliesSection'
 import { JoinSection } from './components/JoinSection'
 import { AuthModal } from './components/AuthModal'
 import { Dashboard } from './components/Dashboard'
+import { CartDrawer } from './components/CartDrawer'
 import { supabase, isConfigured } from './config/supabase'
+import { useProducts } from './hooks/useProducts'
+import { useFamilyCount } from './hooks/useFamilies'
 
 export default function App() {
-  const [products, setProducts] = useState([])
-  const [familyCount, setFamilyCount] = useState(0)
+  const { data: products = [], refetch: refetchProducts, isLoading: isProductsLoading } = useProducts()
+  const { data: familyCount = 0, refetch: refetchFamilyCount } = useFamilyCount()
+  
   const [category, setCategory] = useState('الكل')
   const [selectedFamily, setSelectedFamily] = useState(null)
   const [session, setSession] = useState(null)
@@ -20,35 +24,7 @@ export default function App() {
   const [notice, setNotice] = useState('')
   const navigate = useNavigate()
 
-  async function loadProducts() {
-    if (!isConfigured) return setProducts([])
-    
-    const { data, error } = await supabase
-      .from('products')
-      .select('*, profiles!products_owner_id_fkey(family_name, city, whatsapp)')
-      .eq('status', 'approved')
-      .order('created_at', { ascending: false })
-      
-    if (error) {
-      console.error('Error loading products:', error)
-    } else {
-      setProducts(data || [])
-    }
-  }
-
-  async function loadFamilyCount() {
-    if (!isConfigured) return setFamilyCount(0)
-    const { count, error } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'approved')
-      .eq('is_admin', false)
-    if (!error) setFamilyCount(count || 0)
-  }
-
   useEffect(() => {
-    loadProducts()
-    loadFamilyCount()
     if (!isConfigured) return
 
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
@@ -96,6 +72,7 @@ export default function App() {
 
   return (
     <>
+      <CartDrawer />
       <Routes>
         <Route path="/dashboard" element={
           session ? (
@@ -108,8 +85,8 @@ export default function App() {
               )}
               <Dashboard
                 session={session}
-                onBack={() => { loadProducts(); loadFamilyCount(); navigate('/'); }}
-                onRefreshProducts={loadProducts}
+                onBack={() => { refetchProducts(); refetchFamilyCount(); navigate('/'); }}
+                onRefreshProducts={refetchProducts}
                 onNotice={setNotice}
               />
             </>
@@ -128,7 +105,7 @@ export default function App() {
             />
             
             {notice && (
-              <div className="notice">
+               <div className="notice">
                 {notice}
                 <button onClick={() => setNotice('')}>×</button>
               </div>

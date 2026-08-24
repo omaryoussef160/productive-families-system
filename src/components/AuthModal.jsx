@@ -1,50 +1,108 @@
 import { useState } from 'react'
 import { supabase, isConfigured } from '../config/supabase'
 
-/* Convert any Egyptian phone format to a consistent email for Supabase auth.
-   01012345678 → 201012345678@osra.local
-   +201012345678 → 201012345678@osra.local */
 function phoneToEmail(value) {
   const digits = value.replace(/\D/g, '')
   const normalized = digits.startsWith('20') ? digits : digits.startsWith('0') ? `20${digits.slice(1)}` : `20${digits}`
   return `${normalized}@osra.local`
 }
 
+function toEgyptE164(value) {
+  const digits = value.replace(/\D/g, '')
+  if (digits.startsWith('20')) return `+${digits}`
+  if (digits.startsWith('0')) return `+20${digits.slice(1)}`
+  return `+${digits}`
+}
+
 export function AuthModal({ onClose, onNotice, onScrollToJoin }) {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  // view can be 'login' or 'signup-customer'
+  const [view, setView] = useState('login')
+
+  const [form, setForm] = useState({
+    name: '',
+    phone: '',
+    password: ''
+  })
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
     if (!isConfigured) return onNotice('أنشئ مشروع Supabase وأضف بياناته في .env.local أولًا.')
-
-    const form = new FormData(event.currentTarget)
-    const rawPhone = form.get('phone')
-    const password = form.get('password')
-    const email = phoneToEmail(rawPhone)
-
+    
     setLoading(true)
+    const email = phoneToEmail(form.phone)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
-    if (error) {
-      if (error.message.includes('Invalid login')) return onNotice('رقم الموبايل أو كلمة المرور غير صحيحة.')
-      return onNotice(error.message)
+    if (view === 'login') {
+      const { error } = await supabase.auth.signInWithPassword({ email, password: form.password })
+      setLoading(false)
+      if (error) {
+        if (error.message.includes('Invalid login')) return onNotice('رقم الموبايل أو كلمة المرور غير صحيحة.')
+        return onNotice(error.message)
+      }
+      onNotice('تم تسجيل الدخول بنجاح.')
+      onClose()
+    } else {
+      // Customer Signup
+      const normalizedPhone = toEgyptE164(form.phone)
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password: form.password,
+        options: {
+          data: {
+            family_name: form.name.trim(), // We use family_name to store the user's name for consistency
+            whatsapp: normalizedPhone,
+            role: 'customer'
+          }
+        }
+      })
+      setLoading(false)
+      
+      if (error) return onNotice(error.message)
+      
+      onNotice('تم إنشاء حساب المشتري بنجاح! يمكنك الآن تسجيل الدخول.')
+      setView('login')
     }
-    onNotice('تم تسجيل الدخول بنجاح.')
-    onClose()
   }
 
   return (
     <div className="modal-wrap">
       <div className="modal">
         <button className="close" onClick={onClose}>×</button>
-        <p className="eyebrow red">أهلًا بعودتك</p>
-        <h2>الدخول برقم الموبايل</h2>
+        
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '10px' }}>
+          <button 
+            type="button"
+            onClick={() => setView('login')}
+            style={{ flex: 1, padding: '8px', background: 'none', border: 'none', borderBottom: view === 'login' ? '2px solid #0f766e' : 'none', color: view === 'login' ? '#0f766e' : '#78716c', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            تسجيل الدخول
+          </button>
+          <button 
+            type="button"
+            onClick={() => setView('signup-customer')}
+            style={{ flex: 1, padding: '8px', background: 'none', border: 'none', borderBottom: view === 'signup-customer' ? '2px solid #0f766e' : 'none', color: view === 'signup-customer' ? '#0f766e' : '#78716c', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            حساب مشتري جديد
+          </button>
+        </div>
+
+        <h2>{view === 'login' ? 'الدخول برقم الموبايل' : 'إنشاء حساب مشتري'}</h2>
 
         <form onSubmit={handleSubmit}>
+          {view === 'signup-customer' && (
+            <label>الاسم بالكامل
+              <input name="name" type="text" placeholder="مثال: عمر محمد" value={form.name} onChange={handleChange} required />
+            </label>
+          )}
+
           <label>رقم الموبايل / واتساب
-            <input name="phone" type="tel" dir="ltr" placeholder="01012345678" required />
+            <input name="phone" type="tel" dir="ltr" placeholder="01012345678" value={form.phone} onChange={handleChange} required />
           </label>
 
           <label>كلمة المرور
@@ -55,6 +113,7 @@ export function AuthModal({ onClose, onNotice, onScrollToJoin }) {
                 dir="ltr"
                 minLength="6"
                 placeholder="••••••"
+                value={form.password} onChange={handleChange}
                 required
                 style={{ flex: 1, paddingLeft: '42px', width: '100%' }}
               />
@@ -66,7 +125,6 @@ export function AuthModal({ onClose, onNotice, onScrollToJoin }) {
                   background: 'none', border: 'none', cursor: 'pointer',
                   color: '#a8a29e', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}
-                title={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
               >
                 {showPassword ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -84,15 +142,17 @@ export function AuthModal({ onClose, onNotice, onScrollToJoin }) {
           </label>
 
           <button disabled={loading}>
-            {loading ? 'جارٍ التحميل...' : 'دخول'}
+            {loading ? 'جارٍ التحميل...' : (view === 'login' ? 'دخول' : 'إنشاء حساب')}
           </button>
         </form>
 
-        <p className="switch">
-          <button onClick={() => { onClose(); onScrollToJoin && onScrollToJoin(); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>
-            ليس لديك حساب؟ سجّلي من الصفحة الرئيسية
-          </button>
-        </p>
+        {view === 'login' && (
+          <p className="switch">
+            <button type="button" onClick={() => { onClose(); onScrollToJoin && onScrollToJoin(); }} style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>
+              صاحب أسرة منتجة؟ سجل نشاطك من هنا
+            </button>
+          </p>
+        )}
       </div>
     </div>
   )

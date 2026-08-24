@@ -190,14 +190,14 @@ button.outline:hover {
 }
 
 .premium-nav-inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   width: 100%;
 }
 
 .premium-brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 16px;
   text-decoration: none;
@@ -218,6 +218,7 @@ button.outline:hover {
 .premium-nav {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 36px;
 }
 
@@ -235,7 +236,7 @@ button.outline:hover {
   content: '';
   position: absolute;
   bottom: 0;
-  right: 0; /* RTL support */
+  right: 0;
   width: 0;
   height: 2.5px;
   background: #b91c1c;
@@ -251,13 +252,11 @@ button.outline:hover {
   width: 100%;
 }
 
+/* We don't need nav-actions class anymore as inline styles handle it, but keep it just in case */
 .nav-actions {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-right: 12px;
-  padding-right: 24px;
-  border-right: 1px solid #e5e7eb;
 }
 
 .premium-btn {
@@ -402,11 +401,20 @@ button.outline:hover {
 }
 
 @media (max-width: 900px) {
+  .premium-nav-inner {
+    display: flex;
+    justify-content: space-between;
+  }
   .premium-nav { display: none; }
+  .desktop-only { display: none !important; }
   .mobile-menu-btn { display: block; }
+  .mobile-cart-btn { display: block !important; }
   .premium-header { padding: 12px 20px; }
   .premium-header.scrolled { padding: 10px 20px; }
-  .brand-text { font-size: 20px; }
+  .brand-text { 
+    font-size: 20px;
+    white-space: nowrap; /* Prevent logo text from wrapping */
+  }
 }
 
 

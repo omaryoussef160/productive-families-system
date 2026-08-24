@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import './assets/styles/styles.css'
 import './assets/styles/hero.css'
@@ -18,8 +19,12 @@ import './assets/styles/join-form-enhanced.css'
 import './assets/styles/dashboard.css'
 import { BrowserRouter } from 'react-router-dom'
 
+const queryClient = new QueryClient()
+
 createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </QueryClientProvider>
 )

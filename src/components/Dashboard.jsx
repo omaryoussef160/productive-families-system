@@ -6,6 +6,8 @@ import AddProduct from './dashboard/AddProduct';
 import ProfileSettings from './dashboard/ProfileSettings';
 import AdminFamilies from './dashboard/AdminFamilies';
 import AdminProducts from './dashboard/AdminProducts';
+import MyOrders from './dashboard/MyOrders';
+import CustomerOrders from './dashboard/CustomerOrders';
 import logoImg from '../assets/images/logo4.jpg';
 import '../assets/styles/dashboard.css';
 import '../assets/styles/dashboard-responsive.css';
@@ -17,6 +19,7 @@ const icons = {
   overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   products: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
   add: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+  orders: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>,
   profile: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
   families: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   adminProducts: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
@@ -46,14 +49,17 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
       
       if (error) throw error;
       
+      const meta = session.user.user_metadata || {};
+
       if (!data) {
-        const meta = session.user.user_metadata || {};
         const newProfile = {
           id: session.user.id,
           family_name: meta.family_name || 'أسرة منتجة',
           city: meta.city || '',
           whatsapp: meta.whatsapp || '',
-          bio: meta.bio || ''
+          bio: meta.bio || '',
+          role: meta.role || 'family',
+          status: meta.role === 'customer' ? 'approved' : 'pending'
         };
         
         const { data: created, error: insertErr } = await supabase
@@ -69,7 +75,19 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
           setProfile(created || newProfile);
         }
       } else {
-        setProfile(data);
+        // Self-heal: If DB trigger created the profile as family/pending but user is actually a customer
+        if (meta.role === 'customer' && (data.role !== 'customer' || data.status !== 'approved')) {
+          const { data: updatedData } = await supabase
+            .from('profiles')
+            .update({ role: 'customer', status: 'approved' })
+            .eq('id', session.user.id)
+            .select()
+            .single();
+            
+          setProfile(updatedData || { ...data, role: 'customer', status: 'approved' });
+        } else {
+          setProfile(data);
+        }
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
@@ -85,6 +103,7 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
 
   const familyItems = [
     { id: 'overview', label: 'نظرة عامة', icon: icons.overview },
+    { id: 'orders', label: 'الطلبات الواردة', icon: icons.orders },
     { id: 'products', label: 'منتجاتي', icon: icons.products },
     { id: 'add', label: 'إضافة منتج', icon: icons.add },
     { id: 'profile', label: 'ملفي الشخصي', icon: icons.profile },
@@ -96,7 +115,11 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
     { id: 'admin-products', label: 'إدارة المنتجات', icon: icons.adminProducts },
   ];
 
-  const navItems = profile?.is_admin ? adminItems : familyItems;
+  const customerItems = [
+    { id: 'overview', label: 'مشترياتي (طلباتي)', icon: icons.orders },
+  ];
+
+  const navItems = profile?.is_admin ? adminItems : (profile?.role === 'customer' ? customerItems : familyItems);
 
   if (loading) {
     return (
@@ -107,7 +130,7 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
   }
 
   // Block pending family users until Admin approves them
-  if (!profile?.is_admin && profile?.status === 'pending') {
+  if (!profile?.is_admin && profile?.role !== 'customer' && profile?.status === 'pending') {
     return (
       <div className="dash-container" style={{ alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center', minHeight: '100vh', width: '100vw' }}>
         <div style={{ background: 'var(--dash-bg-card)', border: '1px solid var(--dash-border)', padding: '40px 32px', borderRadius: '16px', maxWidth: '480px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
@@ -126,9 +149,16 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
   }
 
   const renderContent = () => {
+    // If customer, "overview" tab actually maps to MyPurchases (which we can build or just map to a new CustomerOrders component)
+    if (profile?.role === 'customer' && activeTab === 'overview') {
+       return <CustomerOrders session={session} onNotice={onNotice} />;
+    }
+
     switch (activeTab) {
       case 'overview':
         return <DashboardOverview profile={profile} session={session} />;
+      case 'orders':
+        return <MyOrders session={session} onNotice={onNotice} />;
       case 'products':
         return <MyProducts session={session} onNotice={onNotice} onEdit={(product) => { setEditingProduct(product); setActiveTab('add'); }} />;
       case 'add':
@@ -140,7 +170,7 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
       case 'admin-products':
         return profile?.is_admin ? <AdminProducts onNotice={onNotice} onProductsUpdated={onRefreshProducts} /> : null;
       default:
-        return <DashboardOverview profile={profile} session={session} />;
+        return profile?.role === 'customer' ? <CustomerOrders session={session} onNotice={onNotice} /> : <DashboardOverview profile={profile} session={session} />;
     }
   };
 
@@ -179,7 +209,7 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
           <div className="dash-user-details">
             <span className="dash-user-name">{profile?.family_name || 'أسرة منتجة'}</span>
             <span className="dash-user-role">
-              {profile?.is_admin ? 'مدير المنصة' : 'أسرة منتجة'}
+              {profile?.is_admin ? 'مدير المنصة' : profile?.role === 'customer' ? 'عميل' : 'أسرة منتجة'}
             </span>
           </div>
         </div>

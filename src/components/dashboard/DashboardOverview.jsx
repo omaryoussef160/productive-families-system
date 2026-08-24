@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../config/supabase';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dashBanner from '../../assets/images/dash-banner.jpg';
 import PageBanner from './PageBanner';
 
@@ -14,6 +15,7 @@ export default function DashboardOverview({ profile, session }) {
   });
   const [recentProducts, setRecentProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [salesData, setSalesData] = useState([]);
 
   useEffect(() => {
     fetchStats();
@@ -45,13 +47,49 @@ export default function DashboardOverview({ profile, session }) {
           .eq('owner_id', session.user.id)
           .order('created_at', { ascending: false });
           
+        const { data: orderItems } = await supabase
+          .from('order_items')
+          .select(`quantity, price_at_time, orders(created_at, status)`)
+          .eq('family_id', session.user.id);
+          
+        // Process revenue for the last 7 days
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          return d.toISOString().split('T')[0];
+        }).reverse();
+
+        const chartDataMap = {};
+        last7Days.forEach(date => chartDataMap[date] = 0);
+        let totalRevenue = 0;
+
+        if (orderItems) {
+          orderItems.forEach(item => {
+            // Business Logic Update: Only count 'completed' (تم التوصيل) orders in actual revenue
+            if (item.orders && item.orders.status === 'completed') {
+              const date = item.orders.created_at.split('T')[0];
+              const itemTotal = item.price_at_time * item.quantity;
+              totalRevenue += itemTotal;
+              if (chartDataMap[date] !== undefined) {
+                chartDataMap[date] += itemTotal;
+              }
+            }
+          });
+        }
+
+        const formattedChartData = last7Days.map(date => ({
+          date: new Date(date).toLocaleDateString('ar-EG', { weekday: 'short' }),
+          'المبيعات': chartDataMap[date]
+        }));
+        
+        setSalesData(formattedChartData);
+
         if (myProducts) {
           setStats({
             products: myProducts.length,
             approvedProducts: myProducts.filter(p => p.status === 'approved').length,
             pendingProducts: myProducts.filter(p => p.status === 'pending').length,
-            families: 0,
-            pendingFamilies: 0
+            revenue: totalRevenue
           });
           setRecentProducts(myProducts.slice(0, 5));
         }
@@ -139,17 +177,44 @@ export default function DashboardOverview({ profile, session }) {
               </div>
             </div>
             <div className="dash-stat-card premium-stat-card">
-              <div className="stat-icon-wrapper orange-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <div className="stat-icon-wrapper blue-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
               </div>
               <div className="stat-content">
-                <div className="dash-stat-title">قيد المراجعة</div>
-                <div className="dash-stat-value" style={{ color: 'var(--dash-warning)' }}>{stats.pendingProducts}</div>
+                <div className="dash-stat-title">إجمالي أرباحك</div>
+                <div className="dash-stat-value" style={{ color: 'var(--dash-primary)' }}>{stats.revenue?.toLocaleString() || 0} ج.م</div>
               </div>
             </div>
           </>
         )}
       </div>
+
+      {/* Analytics Chart (Only for non-admins) */}
+      {!profile?.is_admin && salesData.length > 0 && (
+        <div style={{ marginTop: '40px', background: 'var(--dash-bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--dash-border)' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 24px 0', color: 'var(--dash-text)' }}>المبيعات في آخر 7 أيام</h3>
+          <div style={{ width: '100%', height: '300px' }} dir="ltr">
+            <ResponsiveContainer>
+              <AreaChart data={salesData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#0f766e" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#0f766e" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dx={-10} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', textAlign: 'right' }}
+                  itemStyle={{ color: '#0f766e', fontWeight: 'bold' }}
+                />
+                <Area type="monotone" dataKey="المبيعات" stroke="#0f766e" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Recent Products (Only for non-admins) */}
       {!profile?.is_admin && (
