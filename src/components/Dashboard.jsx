@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 import DashboardOverview from './dashboard/DashboardOverview';
@@ -9,10 +11,8 @@ import AdminProducts from './dashboard/AdminProducts';
 import MyOrders from './dashboard/MyOrders';
 import CustomerOrders from './dashboard/CustomerOrders';
 import logoImg from '../assets/images/logo4.jpg';
-import '../assets/styles/dashboard.css';
-import '../assets/styles/dashboard-responsive.css';
-import '../assets/styles/product-review.css';
 import dashTableFooter from '../assets/images/dash-table-footer.jpg';
+
 
 /* Clean SVG Icons */
 const icons = {
@@ -193,7 +193,7 @@ export function Dashboard({ session, onBack, onRefreshProducts, onNotice }) {
       <aside className={`dash-sidebar ${mobileMenuOpen ? 'show' : ''}`}>
         <div className="dash-logo-area">
           <div className="dash-brand">
-            <img src={logoImg} alt="لمسة أسرة" style={{ width: '42px', height: '42px', objectFit: 'contain', mixBlendMode: 'multiply', borderRadius: '8px' }} />
+            <img src={logoImg?.src || logoImg} alt="لمسة أسرة" style={{ width: '42px', height: '42px', objectFit: 'contain', mixBlendMode: 'multiply', borderRadius: '8px' }} />
             <h2 className="dash-logo-text">لمسة أسرة</h2>
           </div>
           <button className="dash-mobile-toggle" onClick={() => setMobileMenuOpen(false)}>

@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export default function PageBanner({ title, description, imageSrc, size = 'large' }) {
   if (size === 'small') {
@@ -8,8 +9,16 @@ export default function PageBanner({ title, description, imageSrc, size = 'large
           <h2>{title}</h2>
           <p>{description}</p>
         </div>
-        <div className="dash-mini-banner-art">
-          <img src={imageSrc} alt="Banner" />
+        <div className="dash-mini-banner-art" style={{ position: 'relative' }}>
+          {imageSrc && (
+            <Image
+              src={imageSrc}
+              alt={title || 'Banner'}
+              fill
+              sizes="(max-width: 768px) 100vw, 300px"
+              style={{ objectFit: 'cover' }}
+            />
+          )}
           <div className="dash-mini-fade"></div>
         </div>
       </div>
@@ -22,8 +31,17 @@ export default function PageBanner({ title, description, imageSrc, size = 'large
         <h2>{title}</h2>
         <p>{description}</p>
       </div>
-      <div className="dash-banner-art">
-        <img src={imageSrc} alt="Banner" />
+      <div className="dash-banner-art" style={{ position: 'relative' }}>
+        {imageSrc && (
+          <Image
+            src={imageSrc}
+            alt={title || 'Banner'}
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 500px"
+            style={{ objectFit: 'cover' }}
+          />
+        )}
       </div>
     </div>
   );

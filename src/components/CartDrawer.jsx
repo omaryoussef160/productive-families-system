@@ -1,7 +1,9 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useCartStore } from '../store/cartStore';
 import { supabase } from '../config/supabase';
-import '../assets/styles/cart-drawer.css';
+
 
 export function CartDrawer() {
   const { items, isCartOpen, closeCart, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCartStore();

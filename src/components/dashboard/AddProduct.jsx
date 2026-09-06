@@ -1,6 +1,10 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../config/supabase';
+import { revalidateStorefront } from '../../app/actions';
 import dashAddImg from '../../assets/images/dash-add.jpg';
+
 import { categories } from '../../data/catalog';
 
 export default function AddProduct({ session, onNotice, onNavigate, productToEdit, onEditComplete }) {
@@ -65,6 +69,7 @@ export default function AddProduct({ session, onNotice, onNavigate, productToEdi
         ? await supabase.from('products').update(productData).eq('id', productToEdit.id).eq('owner_id', session.user.id)
         : await supabase.from('products').insert([{ ...productData, owner_id: session.user.id }]);
       if (error) throw error;
+      await revalidateStorefront();
       onNotice(isEditing ? 'تم تعديل المنتج وإرساله للمراجعة مرة أخرى.' : 'تم إضافة المنتج بنجاح. هو الآن قيد المراجعة.', 'success');
       onEditComplete?.();
       onNavigate('products');
@@ -83,7 +88,7 @@ export default function AddProduct({ session, onNotice, onNavigate, productToEdi
         
         {/* Cover Image Header */}
         <div style={{ height: '240px', position: 'relative' }}>
-          <img src={dashAddImg} alt="Add Product" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%', mixBlendMode: 'multiply' }} />
+          <img src={dashAddImg?.src || dashAddImg} alt="Add Product" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%', mixBlendMode: 'multiply' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(255,255,255,1), transparent 60%)', zIndex: 1 }}></div>
           <div style={{ position: 'absolute', inset: 0, background: '#fdf5df', zIndex: -1 }}></div>
         </div>

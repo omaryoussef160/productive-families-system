@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../config/supabase';
+
 import joinArt from '../../assets/images/join-art.jpg';
 import { categories } from '../../data/catalog';
 
@@ -159,7 +162,7 @@ export default function ProfileSettings({ profile, session, onNotice, onProfileU
         
         <div className="dash-profile-art-side">
           <div className="dash-s-curve-divider"></div>
-          <img src={joinArt} alt="أسرة منتجة" />
+          <img src={joinArt?.src || joinArt} alt="أسرة منتجة" />
         </div>
       </div>
     </div>

@@ -1,5 +1,8 @@
+'use client';
+
 import { useState } from 'react'
 import { supabase, isConfigured } from '../config/supabase'
+
 
 function phoneToEmail(value) {
   const digits = value.replace(/\D/g, '')

@@ -1,5 +1,10 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../config/supabase';
+import { revalidateStorefront } from '../../app/actions';
+
+
 
 export default function AdminFamilies({ session, onNotice }) {
   const [families, setFamilies] = useState([]);
@@ -44,6 +49,7 @@ export default function AdminFamilies({ session, onNotice }) {
         
       if (error) throw error;
       
+      await revalidateStorefront();
       setFamilies(families.map(f => f.id === id ? { ...f, status } : f));
       onNotice(`تم ${status === 'approved' ? 'قبول' : 'رفض'} الأسرة بنجاح`, 'success');
     } catch (err) {
@@ -65,6 +71,7 @@ export default function AdminFamilies({ session, onNotice }) {
 
       if (error) throw error;
 
+      await revalidateStorefront();
       setFamilies(families.filter(f => f.id !== family.id));
       onNotice(`تم حذف أسرة "${family.family_name}" وجميع منتجاتها نهائياً`, 'success');
     } catch (err) {

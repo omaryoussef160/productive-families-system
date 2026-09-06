@@ -1,5 +1,9 @@
+'use client';
+
+import Image from 'next/image';
 import { whatsappOrderLink } from '../lib/whatsapp';
 import { useCartStore } from '../store/cartStore';
+
 
 export function ProductCard({ product }) {
   const family = product.profiles || {};
@@ -8,9 +12,15 @@ export function ProductCard({ product }) {
 
   return (
     <article className="product">
-      <div className="product-image">
+      <div className="product-image" style={{ position: 'relative', width: '100%', height: '200px', overflow: 'hidden' }}>
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name} />
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            style={{ objectFit: 'cover' }}
+          />
         ) : (
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
@@ -19,6 +29,7 @@ export function ProductCard({ product }) {
           </svg>
         )}
       </div>
+
 
       <div className="product-body">
         <small style={{ color: '#0f766e', fontWeight: '700', fontSize: '12px' }}>{product.category}</small>

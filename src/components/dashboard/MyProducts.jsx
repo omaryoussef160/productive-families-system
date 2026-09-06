@@ -1,5 +1,10 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../config/supabase';
+import { revalidateStorefront } from '../../app/actions';
+
+
 import PageBanner from './PageBanner';
 import dashProductsImg from '../../assets/images/dash-products.jpg';
 
@@ -41,6 +46,7 @@ export default function MyProducts({ session, onNotice, onEdit }) {
         
       if (error) throw error;
       
+      await revalidateStorefront();
       setProducts(products.filter(p => p.id !== id));
       onNotice('تم حذف المنتج بنجاح', 'success');
     } catch (err) {

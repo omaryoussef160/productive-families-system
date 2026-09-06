@@ -1,15 +1,23 @@
+'use client';
+
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useRouter, usePathname } from 'next/navigation'
+
 import logoImg from '../assets/images/logo4.jpg'
 import { useCartStore } from '../store/cartStore'
+
 function Logo({ small = false, scrolled = false }) {
   // Make logo significantly larger by default (e.g. 52px), and shrink it slightly when scrolled
   const size = small ? 32 : (scrolled ? 50 : 64);
   return (
-    <img 
+    <Image 
       src={logoImg} 
       alt="شعار لمسة أسرة" 
       className="premium-logo"
+      width={size}
+      height={size}
+      priority
       style={{ 
         width: size, 
         height: size, 
@@ -23,13 +31,14 @@ function Logo({ small = false, scrolled = false }) {
   )
 }
 
+
 export function Header({ session, onScrollToJoin, onOpenLogin, onOpenDashboard, onLogout }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const cartCount = useCartStore((state) => state.getCartCount())
   const openCart = useCartStore((state) => state.openCart)
-  const navigate = useNavigate()
-  const location = useLocation()
+  const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,8 +52,8 @@ export function Header({ session, onScrollToJoin, onOpenLogin, onOpenDashboard, 
     e.preventDefault()
     setOpen(false) // close mobile menu if open
     
-    if (location.pathname !== '/') {
-      navigate('/')
+    if (pathname !== '/') {
+      router.push('/')
       setTimeout(() => {
         document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' })
       }, 150)
@@ -52,6 +61,7 @@ export function Header({ session, onScrollToJoin, onOpenLogin, onOpenDashboard, 
       document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' })
     }
   }
+
 
   return (
     <header className={`premium-header ${scrolled ? 'scrolled' : ''}`}>

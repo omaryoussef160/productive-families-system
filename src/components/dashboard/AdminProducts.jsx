@@ -1,5 +1,10 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../config/supabase';
+import { revalidateStorefront } from '../../app/actions';
+
+
 
 export default function AdminProducts({ onNotice, onProductsUpdated }) {
   const [products, setProducts] = useState([]);
@@ -39,6 +44,7 @@ export default function AdminProducts({ onNotice, onProductsUpdated }) {
         
       if (error) throw error;
       
+      await revalidateStorefront();
       setProducts(products.map(p => p.id === id ? { ...p, status } : p));
       onProductsUpdated?.();
       onNotice(`تم ${status === 'approved' ? 'قبول' : 'رفض'} المنتج بنجاح`, 'success');

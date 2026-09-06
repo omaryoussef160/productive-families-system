@@ -1,7 +1,10 @@
+'use client';
+
 import { useState } from 'react'
 import { categories } from '../data/catalog'
 import { isConfigured, supabase } from '../config/supabase'
 import joinArt from '../assets/images/join-art.jpg'
+
 
 function phoneToEmail(value) {
   const digits = value.replace(/\D/g, '')
@@ -218,7 +221,7 @@ export function JoinSection({ onNotice, onOpenLogin }) {
         </div>
         <div className="join-art-side">
           <div className="s-curve-divider"></div>
-          <img src={joinArt} alt="أسرة منتجة" />
+          <img src={joinArt?.src || joinArt} alt="أسرة منتجة" />
         </div>
       </div>
     </section>

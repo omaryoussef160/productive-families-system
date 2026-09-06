@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../config/supabase';
+
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dashBanner from '../../assets/images/dash-banner.jpg';
 import PageBanner from './PageBanner';
